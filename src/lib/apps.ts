@@ -16,7 +16,10 @@ async function fetchAppsData(): Promise<App[]> {
       throw new Error(`GitHub fetch failed: ${response.status}`);
     }
     
-    return await response.json() as App[];
+    const text = await response.text();
+    if (!text.trim()) return [];
+    const data = JSON.parse(text);
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.warn('Failed to fetch apps from GitHub, falling back to local file:', error);
     return loadAppsDataLocal();
@@ -24,9 +27,15 @@ async function fetchAppsData(): Promise<App[]> {
 }
 
 function loadAppsDataLocal(): App[] {
-  const filePath = path.join(process.cwd(), 'data', 'apps.json');
-  const fileContent = fs.readFileSync(filePath, 'utf-8');
-  return JSON.parse(fileContent) as App[];
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'apps.json');
+    const fileContent = fs.readFileSync(filePath, 'utf-8').trim();
+    if (!fileContent) return [];
+    const data = JSON.parse(fileContent);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
 
 function loadAppsDataSync(): App[] {
