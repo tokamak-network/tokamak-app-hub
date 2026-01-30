@@ -2,11 +2,58 @@ name: Auto Add App from Issue
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]
 
 jobs:
+  auto-approve:
+    if: github.event.action == 'opened' && (contains(github.event.issue.labels.*.name, 'app-submission') || contains(github.event.issue.title, '[App Submission]'))
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    outputs:
+      approved: ${{ steps.check.outputs.approved }}
+    
+    steps:
+      - name: Check if user is allowed
+        id: check
+        uses: actions/github-script@v7
+        env:
+          ALLOWED_USERS: ${{ secrets.ALLOWED_USERS }}
+        with:
+          script: |
+            const issueAuthor = context.payload.issue.user.login;
+            const allowedUsers = (process.env.ALLOWED_USERS || '').split(',').map(u => u.trim().toLowerCase());
+            
+            console.log(`Issue author: ${issueAuthor}`);
+            console.log(`Allowed users count: ${allowedUsers.length}`);
+            
+            if (allowedUsers.includes(issueAuthor.toLowerCase())) {
+              console.log(`✅ ${issueAuthor} is an allowed user.`);
+              core.setOutput('approved', 'true');
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: `🤖 Auto-approved: @${issueAuthor} is a verified team member. Processing...`
+              });
+            } else {
+              console.log(`⏳ ${issueAuthor} is not in the allowed list.`);
+              core.setOutput('approved', 'false');
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: `⏳ Waiting for maintainer approval. A maintainer will review and add the \`approved\` label.`
+              });
+            }
+
   add-app:
-    if: github.event.label.name == 'approved'
+    needs: [auto-approve]
+    if: |
+      (github.event.action == 'opened' && needs.auto-approve.outputs.approved == 'true') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'approved')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,7 +76,6 @@ jobs:
             const issue = context.payload.issue;
             const body = issue.body;
             
-            // Parse issue body
             function parseField(body, fieldName) {
               const regex = new RegExp(`### ${fieldName}\\s*\\n\\s*([^\\n#]+)`, 'i');
               const match = body.match(regex);
@@ -41,7 +87,6 @@ jobs:
             const tagsRaw = parseField(body, 'Tags');
             const shortDescription = parseField(body, 'Short Description');
             
-            // Validate required fields
             if (!githubUrl || !category || !shortDescription) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -49,16 +94,9 @@ jobs:
                 issue_number: issue.number,
                 body: '❌ Missing required fields. Please ensure GitHub URL, Category, and Short Description are provided.'
               });
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                name: 'approved'
-              });
               return;
             }
             
-            // Validate GitHub URL format
             const urlMatch = githubUrl.match(/github\.com\/([^\/]+)\/([^\/\s]+)/);
             if (!urlMatch) {
               await github.rest.issues.createComment({
@@ -73,7 +111,6 @@ jobs:
             const [, owner, repo] = urlMatch;
             const repoName = repo.replace(/\.git$/, '');
             
-            // Fetch repo info from GitHub API
             let repoInfo;
             try {
               const { data } = await github.rest.repos.get({
@@ -91,11 +128,9 @@ jobs:
               return;
             }
             
-            // Read existing apps
             const appsPath = 'data/apps.json';
             const apps = JSON.parse(fs.readFileSync(appsPath, 'utf8'));
             
-            // Check for duplicates
             const isDuplicate = apps.some(app => 
               app.githubUrl.toLowerCase() === githubUrl.toLowerCase() ||
               app.slug === repoName.toLowerCase()
@@ -117,7 +152,6 @@ jobs:
               return;
             }
             
-            // Validate category
             const validCategories = ['dapp', 'smart-contract', 'sdk', 'tool', 'ai', 'zk', 'other'];
             if (!validCategories.includes(category)) {
               await github.rest.issues.createComment({
@@ -129,7 +163,6 @@ jobs:
               return;
             }
             
-            // Create new app entry
             const newApp = {
               id: crypto.randomUUID(),
               slug: repoName.toLowerCase(),
@@ -152,13 +185,9 @@ jobs:
               updatedAt: new Date().toISOString()
             };
             
-            // Add to apps array
             apps.push(newApp);
-            
-            // Write back to file
             fs.writeFileSync(appsPath, JSON.stringify(apps, null, 2) + '\n');
             
-            // Set output for commit
             core.exportVariable('APP_NAME', newApp.name);
             core.exportVariable('APP_SLUG', newApp.slug);
             core.exportVariable('ISSUE_NUMBER', issue.number);
@@ -168,7 +197,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add data/apps.json
-          git commit -m "feat: add ${APP_NAME} to app hub (closes #${ISSUE_NUMBER})"
+          git commit -m "feat: add ${APP_NAME} to app hub (closes #${ISSUE_NUMBER})" || exit 0
           git push
 
       - name: Comment on Issue
@@ -177,6 +206,15 @@ jobs:
           script: |
             const appName = process.env.APP_NAME;
             const appSlug = process.env.APP_SLUG;
+            
+            if (!appName) return;
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(process.env.ISSUE_NUMBER),
+              labels: ['approved']
+            });
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
