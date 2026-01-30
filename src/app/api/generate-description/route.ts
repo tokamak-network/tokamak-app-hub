@@ -98,15 +98,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const prompt = `Write a very short description for this GitHub repository. STRICT LIMIT: 70 characters maximum. Be concise.
+  const prompt = `Write a short, user-friendly description for this software project. 
+
+Rules:
+- Maximum 80 characters
+- Explain what the app DOES for users, not how it's built
+- NO technical terms (no framework names, no programming languages, no "API", "SDK", etc.)
+- Write for non-technical people
+- One sentence only
 
 Repository: ${owner}/${repoName}
-${repoLanguage ? `Language: ${repoLanguage}` : ""}
-${repoTopics.length > 0 ? `Topics: ${repoTopics.join(", ")}` : ""}
 ${repoDescription ? `Description: ${repoDescription}` : ""}
 ${readmeContent ? `README:\n${readmeContent}` : ""}
 
-Reply with ONLY the description. No quotes. Max 70 characters.`;
+Reply with ONLY the description. No quotes.`;
 
   try {
     const aiResponse = await fetch(AI_API_URL, {

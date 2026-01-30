@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES } from '@/constants/categories';
@@ -162,12 +163,13 @@ export function SubmitForm() {
                 )}
               </Button>
             </div>
-            <Input
+            <Textarea
               id="shortDescription"
               placeholder="Brief description of your app (max 100 chars)"
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
               maxLength={100}
+              rows={2}
             />
             <p className="text-xs text-muted-foreground text-right">
               {shortDescription.length}/100
