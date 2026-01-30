@@ -1,0 +1,177 @@
+# Tokamak App Hub
+
+> Internal app/package marketplace for Tokamak Network team. Enables AI-generated app registration and organization repository creation.
+
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Tokamak App Hub                            │
+├─────────────────────────────────────────────────────────────────┤
+│  /                    → App marketplace (search, filter, browse)│
+│  /apps/[slug]         → App detail page with GitHub stats       │
+│  /submit              → Submit app via GitHub Issue             │
+│  /create-repo         → Create repo in tokamak-network org      │
+├─────────────────────────────────────────────────────────────────┤
+│  /api/auth/*          → NextAuth.js GitHub OAuth endpoints      │
+│  /api/repos           → POST: Create repo + invite collaborator │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Tech Stack
+
+- Next.js 15 (App Router) + React 19 + TypeScript
+- Tailwind CSS + shadcn/ui
+- NextAuth.js v5 (GitHub OAuth)
+- Octokit (GitHub API)
+- Fuse.js (fuzzy search)
+- Zod (validation)
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/auth.ts` | NextAuth.js configuration with GitHub provider |
+| `src/app/api/repos/route.ts` | Repository creation endpoint with rate limiting |
+| `src/app/create-repo/page.tsx` | Repository creation UI |
+| `src/components/create-repo/CreateRepoForm.tsx` | Form with OAuth flow |
+| `data/apps.json` | App registry data |
+| `.github/workflows/auto-add-app.yml` | Auto-register apps on issue approval |
+
+## API: POST /api/repos
+
+Creates a repository in `tokamak-network` organization and invites the authenticated user as collaborator.
+
+### Request
+
+```json
+{
+  "repoName": "my-new-project",
+  "description": "Optional description",
+  "isPrivate": false
+}
+```
+
+### Response (Success)
+
+```json
+{
+  "success": true,
+  "repository": {
+    "name": "my-new-project",
+    "fullName": "tokamak-network/my-new-project",
+    "url": "https://github.com/tokamak-network/my-new-project",
+    "cloneUrl": "https://github.com/tokamak-network/my-new-project.git"
+  },
+  "message": "Repository created and you have been invited as a collaborator with write access."
+}
+```
+
+### Error Responses
+
+| Status | Error |
+|--------|-------|
+| 401 | Unauthorized. Please sign in with GitHub. |
+| 403 | You are not authorized to create repositories. |
+| 409 | Repository name already exists in the organization. |
+| 429 | Rate limit exceeded. Try again in X minutes. |
+
+### Security
+
+- **Authentication**: GitHub OAuth required
+- **Authorization**: Username must be in `ALLOWED_USERS` env variable
+- **Rate Limit**: 5 requests per hour per user (in-memory)
+- **Reserved Names**: `.github`, `.git`, `api`, `admin`, `login`, `settings`, etc.
+
+## Environment Variables
+
+```bash
+# Required for repository creation feature
+AUTH_SECRET=<openssl rand -base64 32>
+GITHUB_CLIENT_ID=<GitHub OAuth App Client ID>
+GITHUB_CLIENT_SECRET=<GitHub OAuth App Client Secret>
+GITHUB_ADMIN_TOKEN=<PAT with repo, admin:org scopes>
+ALLOWED_USERS=user1,user2,user3
+
+# Optional
+GITHUB_TOKEN=<PAT for higher API rate limits>
+```
+
+## App Submission Flow
+
+```
+1. User submits app via /submit page
+   ↓
+2. GitHub Issue created with app details
+   ↓
+3. Maintainer reviews and adds "approved" label
+   ↓
+4. GitHub Action triggers:
+   - Validates URL and category
+   - Checks for duplicates
+   - Adds app to data/apps.json
+   - Commits and closes issue
+```
+
+## Repository Creation Flow
+
+```
+1. User visits /create-repo
+   ↓
+2. User signs in with GitHub OAuth
+   ↓
+3. Server checks if username is in ALLOWED_USERS
+   ↓
+4. Server checks rate limit (5/hour)
+   ↓
+5. Server creates repo in tokamak-network org using GITHUB_ADMIN_TOKEN
+   ↓
+6. Server invites user as collaborator with "push" permission
+   ↓
+7. User receives invitation email from GitHub
+```
+
+## Data Schema
+
+### App (data/apps.json)
+
+```typescript
+interface App {
+  slug: string;           // URL-friendly identifier
+  name: string;           // Display name
+  description: string;    // Short description
+  githubUrl: string;      // GitHub repository URL
+  category: "dapp" | "smart-contract" | "sdk" | "tool" | "ai" | "other";
+  tags: string[];         // Search tags
+  createdAt: string;      // ISO date
+}
+```
+
+## Categories
+
+| Value | Label |
+|-------|-------|
+| dapp | dApp |
+| smart-contract | Smart Contract |
+| sdk | SDK |
+| tool | Tool |
+| ai | AI |
+| other | Other |
+
+## Common Operations
+
+### Add allowed user
+
+Add username to `ALLOWED_USERS` environment variable (comma-separated).
+
+### Change rate limit
+
+Edit `src/app/api/repos/route.ts`:
+```typescript
+const RATE_LIMIT_MAX = 5;              // requests
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;  // 1 hour
+```
+
+### Add reserved repository name
+
+Edit `RESERVED_NAMES` array in `src/app/api/repos/route.ts`.
