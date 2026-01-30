@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, FolderPlus } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export function Header() {
@@ -16,6 +16,12 @@ export function Header() {
         
         <div className="flex items-center space-x-2">
           <ThemeToggle />
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/create-repo">
+              <FolderPlus className="h-4 w-4 mr-2" />
+              Create Repo
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/submit">
               <Plus className="h-4 w-4 mr-2" />
