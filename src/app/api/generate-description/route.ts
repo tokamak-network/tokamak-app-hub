@@ -98,20 +98,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const prompt = `Write a short, user-friendly description for this software project. 
-
-Rules:
-- Maximum 80 characters
-- Explain what the app DOES for users, not how it's built
-- NO technical terms (no framework names, no programming languages, no "API", "SDK", etc.)
-- Write for non-technical people
-- One sentence only
+  const prompt = `Analyze this software project and provide:
+1. A short description (max 100 characters) explaining what the app does for users in simple terms. No technical jargon.
+2. 3-5 relevant tags (lowercase, single words)
 
 Repository: ${owner}/${repoName}
+${repoLanguage ? `Language: ${repoLanguage}` : ""}
 ${repoDescription ? `Description: ${repoDescription}` : ""}
 ${readmeContent ? `README:\n${readmeContent}` : ""}
 
-Reply with ONLY the description. No quotes.`;
+Respond in this exact JSON format only:
+{"description": "your description here", "tags": ["tag1", "tag2", "tag3"]}`;
 
   try {
     const aiResponse = await fetch(AI_API_URL, {
@@ -123,7 +120,7 @@ Reply with ONLY the description. No quotes.`;
       body: JSON.stringify({
         model: AI_MODEL,
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 100,
+        max_tokens: 150,
         temperature: 0.3,
       }),
       cache: "no-store",
@@ -139,17 +136,32 @@ Reply with ONLY the description. No quotes.`;
     }
 
     const aiData = await aiResponse.json();
-    let description = aiData.choices?.[0]?.message?.content?.trim() || "";
+    const content = aiData.choices?.[0]?.message?.content?.trim() || "";
 
-    description = description.replace(/^["']|["']$/g, "");
+    let description = "";
+    let tags: string[] = [];
 
-    if (description.length > 90) {
-      const truncated = description.substring(0, 87);
-      const lastSpace = truncated.lastIndexOf(" ");
-      description = (lastSpace > 50 ? truncated.substring(0, lastSpace) : truncated) + "...";
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        description = parsed.description || "";
+        tags = Array.isArray(parsed.tags) ? parsed.tags : [];
+      }
+    } catch {
+      description = content.replace(/^["']|["']$/g, "");
     }
 
-    return NextResponse.json({ description });
+    if (description.length > 100) {
+      description = description.substring(0, 97) + "...";
+    }
+
+    tags = tags
+      .map((t: string) => t.toLowerCase().replace(/[^a-z0-9-]/g, ""))
+      .filter((t: string) => t.length > 0)
+      .slice(0, 5);
+
+    return NextResponse.json({ description, tags });
   } catch (error) {
     console.error("AI API request failed:", error);
     return NextResponse.json(

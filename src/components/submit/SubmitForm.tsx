@@ -47,6 +47,9 @@ export function SubmitForm() {
       }
 
       setShortDescription(data.description);
+      if (data.tags && data.tags.length > 0) {
+        setTags(data.tags.join(', '));
+      }
     } catch {
       setError('Failed to generate description. Please try again.');
     } finally {
