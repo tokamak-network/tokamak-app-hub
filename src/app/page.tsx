@@ -3,10 +3,8 @@ import { getApps } from '@/lib/apps';
 import { AppListClient } from './app-list-client';
 import { AppGridSkeleton } from '@/components/app';
 
-export const dynamic = 'force-dynamic';
-
-export default async function HomePage() {
-  const apps = await getApps();
+export default function HomePage() {
+  const apps = getApps();
 
   return (
     <div className="container py-8">

@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const app = await getAppBySlug(slug);
+  const app = getAppBySlug(slug);
   
   if (!app) {
     return { title: 'App Not Found' };
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function AppDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const app = await getAppBySlug(slug);
+  const app = getAppBySlug(slug);
 
   if (!app) {
     notFound();
