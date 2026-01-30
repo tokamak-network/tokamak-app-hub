@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const AI_API_URL = "https://api.ai.tokamak.network/v1/chat/completions";
-const AI_MODEL = "qwen3-80b-next";
+const AI_MODEL = "qwen3-235b";
 
 export const dynamic = "force-dynamic";
 
