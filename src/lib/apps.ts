@@ -4,12 +4,11 @@ import fs from 'fs';
 import path from 'path';
 
 const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/tokamak-network/tokamak-app-hub/main/data/apps.json';
-const REVALIDATE_SECONDS = 20;
 
 async function fetchAppsData(): Promise<App[]> {
   try {
     const response = await fetch(GITHUB_RAW_URL, {
-      next: { revalidate: REVALIDATE_SECONDS },
+      cache: 'no-store',
     });
     
     if (!response.ok) {
