@@ -52,13 +52,25 @@ Edit `.env.local` with required values:
 
 ### GitHub OAuth App Setup
 
+You need **two separate OAuth Apps**: one for development, one for production.
+
+#### Development (localhost)
+
 1. Go to https://github.com/settings/developers
 2. Click "OAuth Apps" → "New OAuth App"
 3. Configure:
-   - Application name: `Tokamak App Hub`
+   - Application name: `tokamak-app-hub-dev`
    - Homepage URL: `http://localhost:3000`
    - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
 4. Add Client ID and Client Secret to `.env.local`
+
+#### Production
+
+1. Create another OAuth App with your production domain:
+   - Application name: `tokamak-app-hub`
+   - Homepage URL: `https://your-domain.vercel.app`
+   - Authorization callback URL: `https://your-domain.vercel.app/api/auth/callback/github`
+2. Add credentials to Vercel Environment Variables
 
 ### Run Development Server
 
