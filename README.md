@@ -1,31 +1,31 @@
 # Tokamak App Hub
 
-Tokamak Network 팀을 위한 내부 앱/패키지 마켓플레이스입니다. AI가 생성한 앱과 패키지를 등록하고 검색할 수 있습니다.
+Internal app/package marketplace for Tokamak Network team. Register and discover AI-generated apps and packages.
 
-## 주요 기능
+## Features
 
-### 앱 브라우징
-- 카테고리별 앱 검색 (dApp, SDK, Tool, Smart Contract, AI)
-- 실시간 퍼지 검색
-- GitHub 통계 표시 (stars, forks)
+### App Browsing
+- Browse apps by category (dApp, SDK, Tool, Smart Contract, AI)
+- Real-time fuzzy search
+- GitHub statistics display (stars, forks)
 
-### 앱 제출
-- GitHub Issue를 통한 앱 제출
-- `approved` 라벨 추가 시 자동 등록 (GitHub Actions)
+### App Submission
+- Submit apps via GitHub Issues
+- Auto-registration when `approved` label is added (GitHub Actions)
 
-### 저장소 생성
-- GitHub OAuth 인증 후 `tokamak-network` 조직에 저장소 자동 생성
-- 생성자를 collaborator로 자동 초대 (write 권한)
-- 허용된 사용자만 생성 가능
+### Repository Creation
+- Create repositories in `tokamak-network` organization with GitHub OAuth
+- Auto-invite creator as collaborator (write permission)
+- Restricted to allowed users only
 
-## 시작하기
+## Getting Started
 
-### 사전 요구사항
+### Prerequisites
 
 - Node.js 18+
 - pnpm
 
-### 설치
+### Installation
 
 ```bash
 git clone https://github.com/tokamak-network/tokamak-app-hub.git
@@ -33,99 +33,99 @@ cd tokamak-app-hub
 pnpm install
 ```
 
-### 환경 변수 설정
+### Environment Variables
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-`.env.local` 파일을 편집하여 필요한 값들을 설정합니다:
+Edit `.env.local` with required values:
 
-| 변수 | 설명 | 필수 |
-|------|------|------|
-| `AUTH_SECRET` | NextAuth.js 시크릿 (`openssl rand -base64 32`) | Yes |
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `AUTH_SECRET` | NextAuth.js secret (`openssl rand -base64 32`) | Yes |
 | `GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | Yes |
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | Yes |
-| `GITHUB_ADMIN_TOKEN` | 조직 관리자 PAT (`repo`, `admin:org` 스코프) | Yes |
-| `ALLOWED_USERS` | 저장소 생성 허용 GitHub username 목록 (콤마 구분) | Yes |
-| `GITHUB_TOKEN` | GitHub API rate limit 용 (선택) | No |
+| `GITHUB_ADMIN_TOKEN` | Org admin PAT (`repo`, `admin:org` scopes) | Yes |
+| `ALLOWED_USERS` | Comma-separated GitHub usernames allowed to create repos | Yes |
+| `GITHUB_TOKEN` | GitHub API rate limit (optional) | No |
 
-### GitHub OAuth App 생성
+### GitHub OAuth App Setup
 
-1. https://github.com/settings/developers 접속
-2. "OAuth Apps" → "New OAuth App" 클릭
-3. 설정:
+1. Go to https://github.com/settings/developers
+2. Click "OAuth Apps" → "New OAuth App"
+3. Configure:
    - Application name: `Tokamak App Hub`
    - Homepage URL: `http://localhost:3000`
    - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
-4. Client ID와 Client Secret을 `.env.local`에 추가
+4. Add Client ID and Client Secret to `.env.local`
 
-### 개발 서버 실행
+### Run Development Server
 
 ```bash
 pnpm dev
 ```
 
-http://localhost:3000 에서 확인
+Open http://localhost:3000
 
-## 사용 방법
+## Usage
 
-### 앱 검색
+### Search Apps
 
-1. 메인 페이지에서 검색어 입력
-2. 카테고리 필터로 원하는 유형 선택
-3. 앱 카드 클릭하여 상세 정보 확인
+1. Enter search query on the main page
+2. Filter by category
+3. Click app card for details
 
-### 앱 제출
+### Submit App
 
-1. 헤더의 "Submit App" 클릭
-2. GitHub 저장소 URL 입력
-3. 카테고리 선택 및 설명 작성
-4. 제출하면 GitHub Issue가 생성됨
-5. 관리자가 `approved` 라벨 추가 시 자동 등록
+1. Click "Submit App" in header
+2. Enter GitHub repository URL
+3. Select category and add description
+4. Submit creates a GitHub Issue
+5. Admin adds `approved` label → auto-registered
 
-### 저장소 생성
+### Create Repository
 
-1. 헤더의 "Create Repo" 클릭
-2. "Sign in with GitHub" 버튼으로 인증
-3. 저장소 이름 및 설명 입력
-4. "Create Repository" 클릭
-5. `tokamak-network` 조직에 저장소가 생성되고 collaborator로 초대됨
+1. Click "Create Repo" in header
+2. Sign in with GitHub
+3. Enter repository name and description
+4. Click "Create Repository"
+5. Repository created in `tokamak-network` org, you're invited as collaborator
 
-**제한 사항:**
-- 허용된 사용자만 생성 가능
-- 시간당 5개 저장소 생성 제한
-- 예약된 이름 사용 불가 (`.github`, `api`, `admin` 등)
+**Limitations:**
+- Allowed users only
+- 5 repositories per hour rate limit
+- Reserved names blocked (`.github`, `api`, `admin`, etc.)
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 tokamak-app-hub/
 ├── data/
-│   └── apps.json              # 앱 데이터
+│   └── apps.json              # App data
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx           # 메인 페이지
-│   │   ├── submit/            # 앱 제출 페이지
-│   │   ├── create-repo/       # 저장소 생성 페이지
-│   │   ├── apps/[slug]/       # 앱 상세 페이지
+│   │   ├── page.tsx           # Main page
+│   │   ├── submit/            # App submission page
+│   │   ├── create-repo/       # Repository creation page
+│   │   ├── apps/[slug]/       # App detail page
 │   │   └── api/
 │   │       ├── auth/          # NextAuth.js API
-│   │       └── repos/         # 저장소 생성 API
+│   │       └── repos/         # Repository creation API
 │   ├── components/
-│   │   ├── ui/                # shadcn/ui 컴포넌트
+│   │   ├── ui/                # shadcn/ui components
 │   │   ├── layout/            # Header, Footer
 │   │   ├── auth/              # SessionProvider
 │   │   ├── create-repo/       # CreateRepoForm
 │   │   └── submit/            # SubmitForm
-│   ├── auth.ts                # NextAuth.js 설정
-│   └── lib/                   # 유틸리티 함수
+│   ├── auth.ts                # NextAuth.js config
+│   └── lib/                   # Utility functions
 └── .github/
     └── workflows/
-        └── auto-add-app.yml   # 앱 자동 등록 워크플로우
+        └── auto-add-app.yml   # Auto-register workflow
 ```
 
-## 기술 스택
+## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
 - **UI**: React 19, Tailwind CSS, shadcn/ui
@@ -134,15 +134,44 @@ tokamak-app-hub/
 - **Validation**: Zod
 - **GitHub API**: Octokit
 
-## 스크립트
+## Scripts
 
 ```bash
-pnpm dev      # 개발 서버 실행
-pnpm build    # 프로덕션 빌드
-pnpm start    # 프로덕션 서버 실행
-pnpm lint     # ESLint 실행
+pnpm dev      # Start development server
+pnpm build    # Production build
+pnpm start    # Start production server
+pnpm lint     # Run ESLint
 ```
 
-## 라이선스
+## License
 
 MIT
+
+---
+
+## 한국어 (Korean)
+
+<details>
+<summary>한국어 문서 보기</summary>
+
+### 주요 기능
+
+- **앱 브라우징**: 카테고리별 검색, 실시간 퍼지 검색, GitHub 통계
+- **앱 제출**: GitHub Issue로 제출, `approved` 라벨 시 자동 등록
+- **저장소 생성**: OAuth 인증 후 조직에 저장소 생성, collaborator 자동 초대
+
+### 사용 방법
+
+**저장소 생성:**
+1. 헤더의 "Create Repo" 클릭
+2. GitHub로 로그인
+3. 저장소 이름/설명 입력
+4. "Create Repository" 클릭
+5. `tokamak-network` 조직에 생성되고 collaborator로 초대됨
+
+**제한 사항:**
+- 허용된 사용자만 생성 가능
+- 시간당 5개 저장소 제한
+- 예약된 이름 사용 불가
+
+</details>
