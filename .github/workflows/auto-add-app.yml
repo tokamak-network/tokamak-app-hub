@@ -1,0 +1,193 @@
+name: Auto Add App from Issue
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  add-app:
+    if: github.event.label.name == 'approved'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Parse Issue and Add App
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const issue = context.payload.issue;
+            const body = issue.body;
+            
+            // Parse issue body
+            function parseField(body, fieldName) {
+              const regex = new RegExp(`### ${fieldName}\\s*\\n\\s*([^\\n#]+)`, 'i');
+              const match = body.match(regex);
+              return match ? match[1].trim() : null;
+            }
+            
+            const githubUrl = parseField(body, 'GitHub Repository URL');
+            const category = parseField(body, 'Category');
+            const tagsRaw = parseField(body, 'Tags');
+            const shortDescription = parseField(body, 'Short Description');
+            
+            // Validate required fields
+            if (!githubUrl || !category || !shortDescription) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '❌ Missing required fields. Please ensure GitHub URL, Category, and Short Description are provided.'
+              });
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                name: 'approved'
+              });
+              return;
+            }
+            
+            // Validate GitHub URL format
+            const urlMatch = githubUrl.match(/github\.com\/([^\/]+)\/([^\/\s]+)/);
+            if (!urlMatch) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '❌ Invalid GitHub URL format.'
+              });
+              return;
+            }
+            
+            const [, owner, repo] = urlMatch;
+            const repoName = repo.replace(/\.git$/, '');
+            
+            // Fetch repo info from GitHub API
+            let repoInfo;
+            try {
+              const { data } = await github.rest.repos.get({
+                owner: owner,
+                repo: repoName
+              });
+              repoInfo = data;
+            } catch (error) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `❌ Could not fetch repository info. Please check the URL: ${githubUrl}`
+              });
+              return;
+            }
+            
+            // Read existing apps
+            const appsPath = 'data/apps.json';
+            const apps = JSON.parse(fs.readFileSync(appsPath, 'utf8'));
+            
+            // Check for duplicates
+            const isDuplicate = apps.some(app => 
+              app.githubUrl.toLowerCase() === githubUrl.toLowerCase() ||
+              app.slug === repoName.toLowerCase()
+            );
+            
+            if (isDuplicate) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '❌ This app is already registered in the hub.'
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              return;
+            }
+            
+            // Validate category
+            const validCategories = ['dapp', 'smart-contract', 'sdk', 'tool', 'ai', 'other'];
+            if (!validCategories.includes(category)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `❌ Invalid category. Must be one of: ${validCategories.join(', ')}`
+              });
+              return;
+            }
+            
+            // Create new app entry
+            const newApp = {
+              id: crypto.randomUUID(),
+              slug: repoName.toLowerCase(),
+              name: repoInfo.name,
+              description: repoInfo.description || shortDescription,
+              shortDescription: shortDescription.substring(0, 100),
+              category: category,
+              tags: tagsRaw ? tagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [],
+              githubUrl: githubUrl,
+              githubOwner: owner,
+              githubRepo: repoName,
+              stars: repoInfo.stargazers_count,
+              forks: repoInfo.forks_count,
+              language: repoInfo.language,
+              author: repoInfo.owner.login,
+              authorAvatar: repoInfo.owner.avatar_url,
+              status: 'active',
+              featured: false,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            
+            // Add to apps array
+            apps.push(newApp);
+            
+            // Write back to file
+            fs.writeFileSync(appsPath, JSON.stringify(apps, null, 2) + '\n');
+            
+            // Set output for commit
+            core.exportVariable('APP_NAME', newApp.name);
+            core.exportVariable('APP_SLUG', newApp.slug);
+            core.exportVariable('ISSUE_NUMBER', issue.number);
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/apps.json
+          git commit -m "feat: add ${APP_NAME} to app hub (closes #${ISSUE_NUMBER})"
+          git push
+
+      - name: Comment on Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const appName = process.env.APP_NAME;
+            const appSlug = process.env.APP_SLUG;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(process.env.ISSUE_NUMBER),
+              body: `✅ **${appName}** has been added to Tokamak App Hub!\n\nView it at: https://tokamak-app-hub.vercel.app/apps/${appSlug}`
+            });
+            
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(process.env.ISSUE_NUMBER),
+              state: 'closed'
+            });

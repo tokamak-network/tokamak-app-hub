@@ -13,7 +13,7 @@ export function SubmitForm() {
   const [githubUrl, setGithubUrl] = useState('');
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState('');
-  const [notes, setNotes] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,6 +35,16 @@ export function SubmitForm() {
       return;
     }
 
+    if (!shortDescription) {
+      setError('Short description is required');
+      return;
+    }
+
+    if (shortDescription.length > 100) {
+      setError('Short description must be 100 characters or less');
+      return;
+    }
+
     const parsed = parseGitHubUrl(githubUrl);
     const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
@@ -42,7 +52,7 @@ export function SubmitForm() {
       githubUrl,
       category,
       tags: tagList,
-      notes: notes || undefined,
+      shortDescription,
       repoName: parsed?.repo,
     });
 
@@ -91,6 +101,22 @@ export function SubmitForm() {
           </div>
 
           <div className="space-y-2">
+            <label htmlFor="shortDescription" className="text-sm font-medium">
+              Short Description <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="shortDescription"
+              placeholder="Brief description of your app (max 100 chars)"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
+              maxLength={100}
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {shortDescription.length}/100
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <label htmlFor="tags" className="text-sm font-medium">
               Tags <span className="text-muted-foreground">(optional, comma separated)</span>
             </label>
@@ -99,19 +125,6 @@ export function SubmitForm() {
               placeholder="typescript, web3, defi"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="notes" className="text-sm font-medium">
-              Additional Notes <span className="text-muted-foreground">(optional)</span>
-            </label>
-            <textarea
-              id="notes"
-              className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Any additional information about your app..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
             />
           </div>
 
@@ -125,8 +138,8 @@ export function SubmitForm() {
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Submitting will redirect you to create a GitHub Issue.
-            A maintainer will review and add your app to the hub.
+            After submitting, a maintainer will review and approve your app.
+            Once approved, it will be automatically added to the hub.
           </p>
         </form>
       </CardContent>

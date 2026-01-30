@@ -12,7 +12,6 @@ const categoryColors: Record<AppCategory, string> = {
   'smart-contract': 'bg-purple-100 text-purple-800 hover:bg-purple-200',
   'sdk': 'bg-green-100 text-green-800 hover:bg-green-200',
   'tool': 'bg-orange-100 text-orange-800 hover:bg-orange-200',
-  'backend': 'bg-gray-100 text-gray-800 hover:bg-gray-200',
   'ai': 'bg-pink-100 text-pink-800 hover:bg-pink-200',
   'other': 'bg-slate-100 text-slate-800 hover:bg-slate-200',
 };
@@ -22,7 +21,6 @@ const categoryLabels: Record<AppCategory, string> = {
   'smart-contract': 'Smart Contract',
   'sdk': 'SDK',
   'tool': 'Tool',
-  'backend': 'Backend',
   'ai': 'AI',
   'other': 'Other',
 };

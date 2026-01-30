@@ -12,7 +12,7 @@ interface CategoryFilterProps {
 export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as AppCategory | 'all')}>
-      <TabsList className="h-auto flex-wrap justify-start gap-1 bg-transparent p-0">
+      <TabsList className="h-auto flex-wrap justify-center gap-1 bg-transparent p-0">
         <TabsTrigger 
           value="all" 
           className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"

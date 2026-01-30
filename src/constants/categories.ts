@@ -12,7 +12,6 @@ export const CATEGORIES: CategoryInfo[] = [
   { value: 'smart-contract', label: 'Smart Contracts', description: 'Solidity Packages & Contracts', icon: 'FileCode' },
   { value: 'sdk', label: 'SDKs', description: 'Libraries & SDKs', icon: 'Package' },
   { value: 'tool', label: 'Tools', description: 'CLI & Developer Tools', icon: 'Wrench' },
-  { value: 'backend', label: 'Backend', description: 'Backend Services & APIs', icon: 'Server' },
   { value: 'ai', label: 'AI', description: 'AI-Generated Applications', icon: 'Bot' },
   { value: 'other', label: 'Other', description: 'Miscellaneous', icon: 'MoreHorizontal' },
 ];

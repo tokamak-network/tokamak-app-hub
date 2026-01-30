@@ -1,0 +1,50 @@
+name: App Submission
+description: Submit a new app to Tokamak App Hub
+title: "[App Submission]: "
+labels: ["app-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting your app to Tokamak App Hub!
+        Please fill out the information below.
+
+  - type: input
+    id: github_url
+    attributes:
+      label: GitHub Repository URL
+      description: The full URL of your GitHub repository
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Select the category that best describes your app
+      options:
+        - dapp
+        - smart-contract
+        - sdk
+        - tool
+        - ai
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma-separated tags (e.g., typescript, web3, defi)
+      placeholder: typescript, web3, defi
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Short Description
+      description: A brief description of your app (max 100 characters)
+      placeholder: Describe what your app does...
+    validations:
+      required: true

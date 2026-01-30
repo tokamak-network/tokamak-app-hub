@@ -5,7 +5,6 @@ export const appCategorySchema = z.enum([
   'smart-contract', 
   'sdk',
   'tool',
-  'backend',
   'ai',
   'other'
 ]);

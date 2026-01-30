@@ -25,23 +25,27 @@ function AppListContent({ apps }: AppListClientProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="w-full sm:max-w-sm">
+      <div className="flex justify-center">
+        <div className="w-full max-w-md">
           <SearchBar value={search} onChange={setSearch} />
         </div>
       </div>
 
-      <CategoryFilter value={category} onChange={setCategory} />
+      <div className="flex justify-center">
+        <CategoryFilter value={category} onChange={setCategory} />
+      </div>
 
-      <ActiveFilters
-        search={search || undefined}
-        category={category}
-        onClearSearch={clearSearch}
-        onClearCategory={clearCategory}
-        onClearAll={clearAll}
-      />
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <ActiveFilters
+          search={search || undefined}
+          category={category}
+          onClearSearch={clearSearch}
+          onClearCategory={clearCategory}
+          onClearAll={clearAll}
+        />
+      </div>
 
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-muted-foreground text-center">
         {filteredApps.length} {filteredApps.length === 1 ? 'app' : 'apps'} found
       </div>
 

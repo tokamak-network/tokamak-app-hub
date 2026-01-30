@@ -5,30 +5,28 @@ interface SubmissionData {
   githubUrl: string;
   category: string;
   tags: string[];
-  notes?: string;
+  shortDescription: string;
   repoName?: string;
 }
 
 export function generateIssueUrl(data: SubmissionData): string {
-  const title = `App Submission: ${data.repoName || 'New App'}`;
+  const title = `[App Submission]: ${data.repoName || 'New App'}`;
   
-  const body = `## App Submission Request
+  const body = `### GitHub Repository URL
 
-### GitHub Repository
 ${data.githubUrl}
 
 ### Category
+
 ${data.category}
 
 ### Tags
-${data.tags.length > 0 ? data.tags.join(', ') : 'None specified'}
 
-### Additional Notes
-${data.notes || 'None'}
+${data.tags.length > 0 ? data.tags.join(', ') : '_No response_'}
 
----
-*This issue was created via the Tokamak App Hub submission form.*
-`;
+### Short Description
+
+${data.shortDescription}`;
 
   const params = new URLSearchParams({
     title,

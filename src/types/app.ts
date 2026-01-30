@@ -32,7 +32,6 @@ export type AppCategory =
   | 'smart-contract'
   | 'sdk'
   | 'tool'
-  | 'backend'
   | 'ai'
   | 'other';
 
