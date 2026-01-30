@@ -5,17 +5,19 @@ on:
     types: [opened, labeled]
 
 jobs:
-  auto-approve:
-    if: github.event.action == 'opened' && (contains(github.event.issue.labels.*.name, 'app-submission') || contains(github.event.issue.title, '[App Submission]'))
+  add-app:
+    if: |
+      (github.event.action == 'labeled' && github.event.label.name == 'approved') ||
+      (github.event.action == 'opened' && (contains(github.event.issue.labels.*.name, 'app-submission') || contains(github.event.issue.title, '[App Submission]')))
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       issues: write
-    outputs:
-      approved: ${{ steps.check.outputs.approved }}
     
     steps:
-      - name: Check if user is allowed
-        id: check
+      - name: Check if auto-approve needed (for opened issues)
+        if: github.event.action == 'opened'
+        id: check-user
         uses: actions/github-script@v7
         env:
           ALLOWED_USERS: ${{ secrets.ALLOWED_USERS }}
@@ -49,26 +51,25 @@ jobs:
               });
             }
 
-  add-app:
-    needs: [auto-approve]
-    if: |
-      (github.event.action == 'opened' && needs.auto-approve.outputs.approved == 'true') ||
-      (github.event.action == 'labeled' && github.event.label.name == 'approved')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-    
-    steps:
+      - name: Exit if not approved
+        if: github.event.action == 'opened' && steps.check-user.outputs.approved != 'true'
+        run: |
+          echo "User not in allowed list. Exiting."
+          exit 0
+
       - name: Checkout repository
+        if: github.event.action == 'labeled' || steps.check-user.outputs.approved == 'true'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: github.event.action == 'labeled' || steps.check-user.outputs.approved == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Parse Issue and Add App
+        if: github.event.action == 'labeled' || steps.check-user.outputs.approved == 'true'
+        id: add-app
         uses: actions/github-script@v7
         with:
           script: |
@@ -94,6 +95,7 @@ jobs:
                 issue_number: issue.number,
                 body: '❌ Missing required fields. Please ensure GitHub URL, Category, and Short Description are provided.'
               });
+              core.setOutput('success', 'false');
               return;
             }
             
@@ -105,6 +107,7 @@ jobs:
                 issue_number: issue.number,
                 body: '❌ Invalid GitHub URL format.'
               });
+              core.setOutput('success', 'false');
               return;
             }
             
@@ -125,6 +128,7 @@ jobs:
                 issue_number: issue.number,
                 body: `❌ Could not fetch repository info. Please check the URL: ${githubUrl}`
               });
+              core.setOutput('success', 'false');
               return;
             }
             
@@ -149,6 +153,7 @@ jobs:
                 issue_number: issue.number,
                 state: 'closed'
               });
+              core.setOutput('success', 'false');
               return;
             }
             
@@ -160,6 +165,7 @@ jobs:
                 issue_number: issue.number,
                 body: `❌ Invalid category. Must be one of: ${validCategories.join(', ')}`
               });
+              core.setOutput('success', 'false');
               return;
             }
             
@@ -191,23 +197,24 @@ jobs:
             core.exportVariable('APP_NAME', newApp.name);
             core.exportVariable('APP_SLUG', newApp.slug);
             core.exportVariable('ISSUE_NUMBER', issue.number);
+            core.setOutput('success', 'true');
 
       - name: Commit and Push
+        if: steps.add-app.outputs.success == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add data/apps.json
-          git commit -m "feat: add ${APP_NAME} to app hub (closes #${ISSUE_NUMBER})" || exit 0
+          git commit -m "feat: add ${APP_NAME} to app hub (closes #${ISSUE_NUMBER})"
           git push
 
-      - name: Comment on Issue
+      - name: Comment on Issue and Close
+        if: steps.add-app.outputs.success == 'true'
         uses: actions/github-script@v7
         with:
           script: |
             const appName = process.env.APP_NAME;
             const appSlug = process.env.APP_SLUG;
-            
-            if (!appName) return;
             
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
