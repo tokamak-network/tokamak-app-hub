@@ -25,9 +25,6 @@ export function AppCard({ app }: AppCardProps) {
               <h3 className="font-semibold text-base leading-tight truncate" title={app.name}>
                 {app.name}
               </h3>
-              <p className="text-sm text-muted-foreground truncate">
-                by {app.author}
-              </p>
             </div>
           </div>
         </CardHeader>

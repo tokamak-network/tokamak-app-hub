@@ -3,8 +3,8 @@ import { getApps } from '@/lib/apps';
 import { AppListClient } from './app-list-client';
 import { AppGridSkeleton } from '@/components/app';
 
-export default function HomePage() {
-  const apps = getApps();
+export default async function HomePage() {
+  const apps = await getApps();
 
   return (
     <div className="container py-8">
