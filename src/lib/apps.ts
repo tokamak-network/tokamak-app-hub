@@ -1,10 +1,16 @@
 import type { App, AppCategory } from '@/types/app';
 import { appSchema } from '@/schemas/app';
-import appsDataRaw from '../../data/apps.json';
+import fs from 'fs';
+import path from 'path';
 
-const appsData = appsDataRaw as App[];
+function loadAppsData(): App[] {
+  const filePath = path.join(process.cwd(), 'data', 'apps.json');
+  const fileContent = fs.readFileSync(filePath, 'utf-8');
+  return JSON.parse(fileContent) as App[];
+}
 
 export function getApps(): App[] {
+  const appsData = loadAppsData();
   return appsData.map(app => appSchema.parse(app));
 }
 
@@ -32,5 +38,6 @@ export function getAllTags(): string[] {
 }
 
 export function getAppSlugs(): string[] {
+  const appsData = loadAppsData();
   return appsData.map(app => app.slug);
 }
