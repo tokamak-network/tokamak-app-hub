@@ -6,6 +6,7 @@ export const appCategorySchema = z.enum([
   'sdk',
   'tool',
   'ai',
+  'zk',
   'other'
 ]);
 
