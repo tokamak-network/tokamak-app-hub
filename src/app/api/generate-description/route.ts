@@ -98,15 +98,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const prompt = `Based on the following GitHub repository information, generate a concise description in 100 characters or less. The description should clearly explain what this project does in a single sentence. Do not use markdown formatting. Do not include any thinking process or explanations.
+  const prompt = `Write a very short description for this GitHub repository. STRICT LIMIT: 70 characters maximum. Be concise.
 
 Repository: ${owner}/${repoName}
 ${repoLanguage ? `Language: ${repoLanguage}` : ""}
 ${repoTopics.length > 0 ? `Topics: ${repoTopics.join(", ")}` : ""}
 ${repoDescription ? `Description: ${repoDescription}` : ""}
-${readmeContent ? `README (truncated):\n${readmeContent}` : ""}
+${readmeContent ? `README:\n${readmeContent}` : ""}
 
-Output ONLY the short description, nothing else. No quotes. Keep it under 100 characters.`;
+Reply with ONLY the description. No quotes. Max 70 characters.`;
 
   try {
     const aiResponse = await fetch(AI_API_URL, {
@@ -138,8 +138,10 @@ Output ONLY the short description, nothing else. No quotes. Keep it under 100 ch
 
     description = description.replace(/^["']|["']$/g, "");
 
-    if (description.length > 100) {
-      description = description.substring(0, 97) + "...";
+    if (description.length > 90) {
+      const truncated = description.substring(0, 87);
+      const lastSpace = truncated.lastIndexOf(" ");
+      description = (lastSpace > 50 ? truncated.substring(0, lastSpace) : truncated) + "...";
     }
 
     return NextResponse.json({ description });
