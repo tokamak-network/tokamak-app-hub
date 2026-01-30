@@ -133,7 +133,16 @@ jobs:
             }
             
             const appsPath = 'data/apps.json';
-            const apps = JSON.parse(fs.readFileSync(appsPath, 'utf8'));
+            let apps = [];
+            try {
+              const content = fs.readFileSync(appsPath, 'utf8').trim();
+              if (content) {
+                apps = JSON.parse(content);
+                if (!Array.isArray(apps)) apps = [];
+              }
+            } catch (e) {
+              apps = [];
+            }
             
             const isDuplicate = apps.some(app => 
               app.githubUrl.toLowerCase() === githubUrl.toLowerCase() ||
