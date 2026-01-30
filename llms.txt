@@ -15,6 +15,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  /api/auth/*          → NextAuth.js GitHub OAuth endpoints      │
 │  /api/repos           → POST: Create repo + invite collaborator │
+│  /api/generate-description → POST: AI-generate app description  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -33,8 +34,10 @@
 |------|---------|
 | `src/auth.ts` | NextAuth.js configuration with GitHub provider |
 | `src/app/api/repos/route.ts` | Repository creation endpoint with rate limiting |
+| `src/app/api/generate-description/route.ts` | AI description generation endpoint |
 | `src/app/create-repo/page.tsx` | Repository creation UI |
 | `src/components/create-repo/CreateRepoForm.tsx` | Form with OAuth flow |
+| `src/components/submit/SubmitForm.tsx` | App submission form with AI generate button |
 | `data/apps.json` | App registry data |
 | `.github/workflows/auto-add-app.yml` | Auto-register apps on issue approval |
 
@@ -95,12 +98,44 @@ ALLOWED_USERS=user1,user2,user3
 
 # Optional
 GITHUB_TOKEN=<PAT for higher API rate limits>
+
+# AI description generation
+TOKAMAK_AI_API_KEY=<Tokamak AI API key>
 ```
+
+## API: POST /api/generate-description
+
+Generates a short description for an app using AI based on GitHub repository README.
+
+### Request
+
+```json
+{
+  "githubUrl": "https://github.com/owner/repo"
+}
+```
+
+### Response (Success)
+
+```json
+{
+  "description": "A TypeScript SDK for interacting with Titan L2 network"
+}
+```
+
+### How it works
+
+1. Fetches repository metadata from GitHub API
+2. Fetches README content (truncated to 3000 chars)
+3. Sends to Tokamak AI API (qwen3-80b-next model)
+4. Returns description under 100 characters
 
 ## App Submission Flow
 
 ```
 1. User submits app via /submit page
+   ↓
+   (Optional) User clicks "Generate with AI" to auto-fill description
    ↓
 2. GitHub Issue created with app details
    ↓
@@ -141,7 +176,7 @@ interface App {
   name: string;           // Display name
   description: string;    // Short description
   githubUrl: string;      // GitHub repository URL
-  category: "dapp" | "smart-contract" | "sdk" | "tool" | "ai" | "other";
+  category: "dapp" | "smart-contract" | "sdk" | "tool" | "ai" | "zk" | "other";
   tags: string[];         // Search tags
   createdAt: string;      // ISO date
 }
@@ -156,6 +191,7 @@ interface App {
 | sdk | SDK |
 | tool | Tool |
 | ai | AI |
+| zk | ZK |
 | other | Other |
 
 ## Common Operations

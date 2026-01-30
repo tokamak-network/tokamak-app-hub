@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,43 @@ export function SubmitForm() {
   const [tags, setTags] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [error, setError] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateDescription = async () => {
+    if (!githubUrl) {
+      setError('Please enter a GitHub URL first');
+      return;
+    }
+
+    if (!isValidGitHubUrl(githubUrl)) {
+      setError('Please enter a valid GitHub repository URL');
+      return;
+    }
+
+    setError('');
+    setIsGenerating(true);
+
+    try {
+      const response = await fetch('/api/generate-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ githubUrl }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to generate description');
+        return;
+      }
+
+      setShortDescription(data.description);
+    } catch {
+      setError('Failed to generate description. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,9 +138,30 @@ export function SubmitForm() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="shortDescription" className="text-sm font-medium">
-              Short Description <span className="text-destructive">*</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="shortDescription" className="text-sm font-medium">
+                Short Description <span className="text-destructive">*</span>
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateDescription}
+                disabled={isGenerating || !githubUrl}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Generate with AI
+                  </>
+                )}
+              </Button>
+            </div>
             <Input
               id="shortDescription"
               placeholder="Brief description of your app (max 100 chars)"
