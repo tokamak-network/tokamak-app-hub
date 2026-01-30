@@ -14,15 +14,15 @@ export function AppCard({ app }: AppCardProps) {
   return (
     <Link href={`/apps/${app.slug}`}>
       <Card className="h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 overflow-hidden">
           <div className="flex items-start gap-3">
             <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <span className="text-primary font-bold text-lg">
                 {app.name.charAt(0).toUpperCase()}
               </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-base leading-tight truncate">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <h3 className="font-semibold text-base leading-tight truncate" title={app.name}>
                 {app.name}
               </h3>
               <p className="text-sm text-muted-foreground truncate">
