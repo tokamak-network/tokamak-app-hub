@@ -45,33 +45,39 @@ export async function POST(request: Request) {
 
   let readmeContent = "";
   let repoDescription = "";
+  let repoLanguage = "";
+  let repoTopics: string[] = [];
+
+  const githubHeaders: HeadersInit = {
+    Accept: "application/vnd.github.v3+json",
+    "User-Agent": "tokamak-app-hub",
+  };
+  
+  if (process.env.GITHUB_TOKEN) {
+    githubHeaders.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
 
   try {
     const repoResponse = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}`,
-      {
-        headers: {
-          Accept: "application/vnd.github.v3+json",
-          ...(process.env.GITHUB_TOKEN && {
-            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          }),
-        },
-      }
+      { headers: githubHeaders }
     );
 
     if (repoResponse.ok) {
       const repoData = await repoResponse.json();
       repoDescription = repoData.description || "";
+      repoLanguage = repoData.language || "";
+      repoTopics = repoData.topics || [];
+    } else {
+      console.error("Repo API error:", repoResponse.status, await repoResponse.text());
     }
 
     const readmeResponse = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/readme`,
       {
         headers: {
+          ...githubHeaders,
           Accept: "application/vnd.github.v3.raw",
-          ...(process.env.GITHUB_TOKEN && {
-            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          }),
         },
       }
     );
@@ -84,20 +90,22 @@ export async function POST(request: Request) {
     console.error("Failed to fetch GitHub data:", error);
   }
 
-  if (!readmeContent && !repoDescription) {
+  if (!readmeContent && !repoDescription && !repoLanguage) {
     return NextResponse.json(
-      { error: "Could not fetch repository information" },
+      { error: "Could not fetch repository information. The repository may be private or does not exist." },
       { status: 404 }
     );
   }
 
-  const prompt = `Based on the following GitHub repository information, generate a concise description in 100 characters or less. The description should clearly explain what this project does in a single sentence. Do not use markdown formatting.
+  const prompt = `Based on the following GitHub repository information, generate a concise description in 100 characters or less. The description should clearly explain what this project does in a single sentence. Do not use markdown formatting. Do not include any thinking process or explanations.
 
 Repository: ${owner}/${repoName}
+${repoLanguage ? `Language: ${repoLanguage}` : ""}
+${repoTopics.length > 0 ? `Topics: ${repoTopics.join(", ")}` : ""}
 ${repoDescription ? `Description: ${repoDescription}` : ""}
 ${readmeContent ? `README (truncated):\n${readmeContent}` : ""}
 
-Generate only the short description, nothing else. Keep it under 100 characters.`;
+Output ONLY the short description, nothing else. No quotes. Keep it under 100 characters.`;
 
   try {
     const aiResponse = await fetch(AI_API_URL, {
