@@ -29,6 +29,7 @@ body:
         - sdk
         - tool
         - ai
+        - zk
         - other
     validations:
       required: true

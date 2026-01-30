@@ -33,6 +33,7 @@ export type AppCategory =
   | 'sdk'
   | 'tool'
   | 'ai'
+  | 'zk'
   | 'other';
 
 export type AppStatus = 'active' | 'beta' | 'deprecated';

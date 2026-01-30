@@ -13,6 +13,7 @@ const categoryColors: Record<AppCategory, string> = {
   'sdk': 'bg-green-100 text-green-800 hover:bg-green-200',
   'tool': 'bg-orange-100 text-orange-800 hover:bg-orange-200',
   'ai': 'bg-pink-100 text-pink-800 hover:bg-pink-200',
+  'zk': 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200',
   'other': 'bg-slate-100 text-slate-800 hover:bg-slate-200',
 };
 
@@ -22,6 +23,7 @@ const categoryLabels: Record<AppCategory, string> = {
   'sdk': 'SDK',
   'tool': 'Tool',
   'ai': 'AI',
+  'zk': 'ZK',
   'other': 'Other',
 };
 

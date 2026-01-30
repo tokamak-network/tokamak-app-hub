@@ -1,6 +1,8 @@
 import type { App, AppCategory } from '@/types/app';
 import { appSchema } from '@/schemas/app';
-import appsData from '../../data/apps.json';
+import appsDataRaw from '../../data/apps.json';
+
+const appsData = appsDataRaw as App[];
 
 export function getApps(): App[] {
   return appsData.map(app => appSchema.parse(app));

@@ -13,6 +13,7 @@ export const CATEGORIES: CategoryInfo[] = [
   { value: 'sdk', label: 'SDKs', description: 'Libraries & SDKs', icon: 'Package' },
   { value: 'tool', label: 'Tools', description: 'CLI & Developer Tools', icon: 'Wrench' },
   { value: 'ai', label: 'AI', description: 'AI-Generated Applications', icon: 'Bot' },
+  { value: 'zk', label: 'ZK', description: 'Zero-Knowledge Proofs & ZK-EVM', icon: 'Shield' },
   { value: 'other', label: 'Other', description: 'Miscellaneous', icon: 'MoreHorizontal' },
 ];
 

@@ -118,7 +118,7 @@ jobs:
             }
             
             // Validate category
-            const validCategories = ['dapp', 'smart-contract', 'sdk', 'tool', 'ai', 'other'];
+            const validCategories = ['dapp', 'smart-contract', 'sdk', 'tool', 'ai', 'zk', 'other'];
             if (!validCategories.includes(category)) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
