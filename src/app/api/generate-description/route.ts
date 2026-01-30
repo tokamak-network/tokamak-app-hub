@@ -3,9 +3,11 @@ import { NextResponse } from "next/server";
 const AI_API_URL = "https://api.ai.tokamak.network/v1/chat/completions";
 const AI_MODEL = "qwen3-80b-next";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const aiApiKey = process.env.TOKAMAK_AI_API_KEY;
-  
+
   if (!aiApiKey) {
     return NextResponse.json(
       { error: "AI API key not configured" },
@@ -17,10 +19,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid request body" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   const { githubUrl } = body;
@@ -48,51 +47,53 @@ export async function POST(request: Request) {
   let repoLanguage = "";
   let repoTopics: string[] = [];
 
-  const githubHeaders: HeadersInit = {
+  const githubHeaders: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",
     "User-Agent": "tokamak-app-hub",
   };
-  
-  if (process.env.GITHUB_TOKEN) {
-    githubHeaders.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+
+  const githubToken = process.env.GITHUB_ADMIN_TOKEN || process.env.GITHUB_TOKEN;
+  if (githubToken && githubToken.startsWith("ghp_") && githubToken.length > 20) {
+    githubHeaders.Authorization = `token ${githubToken}`;
   }
 
   try {
-    const repoResponse = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}`,
-      { headers: githubHeaders }
-    );
+    const repoUrl = `https://api.github.com/repos/${owner}/${repoName}`;
+    const repoResponse = await fetch(repoUrl, {
+      headers: githubHeaders,
+      cache: "no-store",
+    });
 
     if (repoResponse.ok) {
       const repoData = await repoResponse.json();
       repoDescription = repoData.description || "";
       repoLanguage = repoData.language || "";
       repoTopics = repoData.topics || [];
-    } else {
-      console.error("Repo API error:", repoResponse.status, await repoResponse.text());
     }
 
-    const readmeResponse = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/readme`,
-      {
-        headers: {
-          ...githubHeaders,
-          Accept: "application/vnd.github.v3.raw",
-        },
-      }
-    );
+    const readmeUrl = `https://api.github.com/repos/${owner}/${repoName}/readme`;
+    const readmeResponse = await fetch(readmeUrl, {
+      headers: {
+        ...githubHeaders,
+        Accept: "application/vnd.github.v3.raw",
+      },
+      cache: "no-store",
+    });
 
     if (readmeResponse.ok) {
       readmeContent = await readmeResponse.text();
       readmeContent = readmeContent.substring(0, 3000);
     }
   } catch (error) {
-    console.error("Failed to fetch GitHub data:", error);
+    console.error("GitHub fetch error:", error);
   }
 
   if (!readmeContent && !repoDescription && !repoLanguage) {
     return NextResponse.json(
-      { error: "Could not fetch repository information. The repository may be private or does not exist." },
+      {
+        error:
+          "Could not fetch repository information. The repository may be private or does not exist.",
+      },
       { status: 404 }
     );
   }
@@ -116,15 +117,11 @@ Output ONLY the short description, nothing else. No quotes. Keep it under 100 ch
       },
       body: JSON.stringify({
         model: AI_MODEL,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
+        messages: [{ role: "user", content: prompt }],
         max_tokens: 100,
         temperature: 0.3,
       }),
+      cache: "no-store",
     });
 
     if (!aiResponse.ok) {
@@ -138,9 +135,9 @@ Output ONLY the short description, nothing else. No quotes. Keep it under 100 ch
 
     const aiData = await aiResponse.json();
     let description = aiData.choices?.[0]?.message?.content?.trim() || "";
-    
+
     description = description.replace(/^["']|["']$/g, "");
-    
+
     if (description.length > 100) {
       description = description.substring(0, 97) + "...";
     }
