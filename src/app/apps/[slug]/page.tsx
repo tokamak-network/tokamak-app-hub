@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { CategoryBadge } from '@/components/common/CategoryBadge';
 import { TagChip } from '@/components/common/TagChip';
+import { ReadmeSummary } from '@/components/app/ReadmeSummary';
 import { getAppBySlug, getAppSlugs } from '@/lib/apps';
 
 interface PageProps {
@@ -109,6 +110,10 @@ export default async function AppDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold mb-4">Description</h2>
             <p className="text-muted-foreground whitespace-pre-wrap">{app.description}</p>
           </div>
+
+          {app.githubOwner && app.githubRepo && (
+            <ReadmeSummary owner={app.githubOwner} repo={app.githubRepo} />
+          )}
         </CardContent>
       </Card>
     </div>
