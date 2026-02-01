@@ -1,0 +1,159 @@
+name: Sync App Statistics
+
+on:
+  schedule:
+    # Run daily at UTC 00:00 (KST 09:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync-stats:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync GitHub Stats
+        id: sync
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const appsPath = 'data/apps.json';
+            
+            // Read current apps
+            let apps = [];
+            try {
+              const content = fs.readFileSync(appsPath, 'utf8').trim();
+              if (content) {
+                apps = JSON.parse(content);
+                if (!Array.isArray(apps)) apps = [];
+              }
+            } catch (e) {
+              console.log('Failed to read apps.json:', e.message);
+              return;
+            }
+            
+            if (apps.length === 0) {
+              console.log('No apps to update');
+              return;
+            }
+            
+            console.log(`Syncing stats for ${apps.length} apps...`);
+            
+            let hasChanges = false;
+            const updatedApps = [];
+            const errors = [];
+            
+            for (const app of apps) {
+              const { githubOwner, githubRepo, name } = app;
+              
+              if (!githubOwner || !githubRepo) {
+                console.log(`Skipping ${name}: missing owner/repo info`);
+                updatedApps.push(app);
+                continue;
+              }
+              
+              try {
+                const { data: repoData } = await github.rest.repos.get({
+                  owner: githubOwner,
+                  repo: githubRepo
+                });
+                
+                // Check for changes
+                const changes = [];
+                
+                if (app.stars !== repoData.stargazers_count) {
+                  changes.push(`stars: ${app.stars} → ${repoData.stargazers_count}`);
+                }
+                if (app.forks !== repoData.forks_count) {
+                  changes.push(`forks: ${app.forks} → ${repoData.forks_count}`);
+                }
+                if (app.description !== repoData.description) {
+                  changes.push(`description updated`);
+                }
+                if (app.language !== repoData.language) {
+                  changes.push(`language: ${app.language} → ${repoData.language}`);
+                }
+                if (app.status === 'archived' || app.status === 'not_found') {
+                  changes.push(`status: ${app.status} → active`);
+                }
+                
+                if (changes.length > 0) {
+                  console.log(`✅ ${name}: ${changes.join(', ')}`);
+                  hasChanges = true;
+                }
+                
+                // Update app data
+                updatedApps.push({
+                  ...app,
+                  stars: repoData.stargazers_count,
+                  forks: repoData.forks_count,
+                  description: repoData.description || app.description,
+                  language: repoData.language,
+                  authorAvatar: repoData.owner.avatar_url,
+                  status: repoData.archived ? 'archived' : 'active',
+                  updatedAt: new Date().toISOString()
+                });
+                
+              } catch (error) {
+                if (error.status === 404) {
+                  console.log(`⚠️ ${name}: Repository not found (may be deleted or renamed)`);
+                  errors.push(`${name}: not found`);
+                  
+                  // Mark as not found but keep in list
+                  if (app.status !== 'not_found') {
+                    hasChanges = true;
+                  }
+                  updatedApps.push({
+                    ...app,
+                    status: 'not_found',
+                    updatedAt: new Date().toISOString()
+                  });
+                } else {
+                  console.log(`❌ ${name}: API error - ${error.message}`);
+                  errors.push(`${name}: ${error.message}`);
+                  // Keep existing data on API errors
+                  updatedApps.push(app);
+                }
+              }
+              
+              // Small delay to avoid rate limiting
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            if (hasChanges) {
+              // Write updated apps
+              fs.writeFileSync(appsPath, JSON.stringify(updatedApps, null, 2) + '\n');
+              console.log('\n📝 apps.json updated');
+              core.setOutput('has_changes', 'true');
+            } else {
+              console.log('\n✨ No changes detected');
+              core.setOutput('has_changes', 'false');
+            }
+            
+            // Summary
+            console.log(`\n📊 Summary:`);
+            console.log(`   - Total apps: ${apps.length}`);
+            console.log(`   - Updated: ${hasChanges ? 'Yes' : 'No'}`);
+            if (errors.length > 0) {
+              console.log(`   - Errors: ${errors.length}`);
+              errors.forEach(e => console.log(`     - ${e}`));
+            }
+
+      - name: Commit and Push
+        if: steps.sync.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/apps.json
+          git diff --staged --quiet || git commit -m "chore: sync app statistics [skip ci]"
+          git push
