@@ -13,7 +13,7 @@
     "githubUrl": "https://github.com/tokamak-network/private-app-channel-manager",
     "githubOwner": "tokamak-network",
     "githubRepo": "private-app-channel-manager",
-    "stars": 0,
+    "stars": 1,
     "forks": 0,
     "language": "TypeScript",
     "author": "tokamak-network",
@@ -21,7 +21,7 @@
     "status": "active",
     "featured": false,
     "createdAt": "2026-01-30T10:49:42.438Z",
-    "updatedAt": "2026-01-30T10:49:42.438Z"
+    "updatedAt": "2026-02-02T00:11:36.389Z"
   },
   {
     "id": "6567976e-5534-4d5a-be31-e90bee6c1c7a",
@@ -40,14 +40,14 @@
     "githubUrl": "https://github.com/tokamak-network/zk-dex",
     "githubOwner": "tokamak-network",
     "githubRepo": "zk-dex",
-    "stars": 12,
-    "forks": 1,
+    "stars": 13,
+    "forks": 2,
     "language": "JavaScript",
     "author": "tokamak-network",
     "authorAvatar": "https://avatars.githubusercontent.com/u/30994093?v=4",
     "status": "active",
     "featured": false,
     "createdAt": "2026-01-30T11:45:06.591Z",
-    "updatedAt": "2026-01-30T11:45:06.591Z"
+    "updatedAt": "2026-02-02T00:11:36.696Z"
   }
 ]
