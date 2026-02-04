@@ -49,5 +49,28 @@
     "featured": false,
     "createdAt": "2026-01-30T11:45:06.591Z",
     "updatedAt": "2026-02-04T00:10:08.362Z"
+  },
+  {
+    "id": "6a1b63d5-1d8a-4e55-8f68-c57e9fc2e0eb",
+    "slug": "ton-staking-v2",
+    "name": "ton-staking-v2",
+    "description": "This is a model that allows you to participate in the Lottery and receive seigniorage with the amoun",
+    "shortDescription": "This is a model that allows you to participate in the Lottery and receive seigniorage with the amoun",
+    "category": "smart-contract",
+    "tags": [
+      "web3"
+    ],
+    "githubUrl": "https://github.com/tokamak-network/ton-staking-v2/tree/lotteryCandidate",
+    "githubOwner": "tokamak-network",
+    "githubRepo": "ton-staking-v2",
+    "stars": 25,
+    "forks": 6,
+    "language": "TypeScript",
+    "author": "tokamak-network",
+    "authorAvatar": "https://avatars.githubusercontent.com/u/30994093?v=4",
+    "status": "active",
+    "featured": false,
+    "createdAt": "2026-02-04T16:17:54.203Z",
+    "updatedAt": "2026-02-04T16:17:54.203Z"
   }
 ]
