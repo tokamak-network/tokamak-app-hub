@@ -21,7 +21,7 @@
     "status": "active",
     "featured": false,
     "createdAt": "2026-01-30T10:49:42.438Z",
-    "updatedAt": "2026-02-11T00:16:37.666Z"
+    "updatedAt": "2026-02-12T00:10:50.339Z"
   },
   {
     "id": "6567976e-5534-4d5a-be31-e90bee6c1c7a",
@@ -48,7 +48,7 @@
     "status": "active",
     "featured": false,
     "createdAt": "2026-01-30T11:45:06.591Z",
-    "updatedAt": "2026-02-11T00:16:37.950Z"
+    "updatedAt": "2026-02-12T00:10:50.690Z"
   },
   {
     "id": "6a1b63d5-1d8a-4e55-8f68-c57e9fc2e0eb",
@@ -63,7 +63,7 @@
     "githubUrl": "https://github.com/tokamak-network/ton-staking-v2/tree/lotteryCandidate",
     "githubOwner": "tokamak-network",
     "githubRepo": "ton-staking-v2",
-    "stars": 25,
+    "stars": 26,
     "forks": 7,
     "language": "TypeScript",
     "author": "tokamak-network",
@@ -71,6 +71,6 @@
     "status": "active",
     "featured": false,
     "createdAt": "2026-02-04T16:17:54.203Z",
-    "updatedAt": "2026-02-11T00:16:38.260Z"
+    "updatedAt": "2026-02-12T00:10:51.044Z"
   }
 ]
