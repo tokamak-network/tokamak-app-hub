@@ -21,7 +21,7 @@
     "status": "active",
     "featured": false,
     "createdAt": "2026-01-30T10:49:42.438Z",
-    "updatedAt": "2026-05-13T00:28:02.709Z"
+    "updatedAt": "2026-05-14T00:29:23.590Z"
   },
   {
     "id": "6567976e-5534-4d5a-be31-e90bee6c1c7a",
@@ -48,7 +48,7 @@
     "status": "active",
     "featured": false,
     "createdAt": "2026-01-30T11:45:06.591Z",
-    "updatedAt": "2026-05-13T00:28:02.999Z"
+    "updatedAt": "2026-05-14T00:29:23.918Z"
   },
   {
     "id": "6a1b63d5-1d8a-4e55-8f68-c57e9fc2e0eb",
@@ -71,6 +71,6 @@
     "status": "active",
     "featured": false,
     "createdAt": "2026-02-04T16:17:54.203Z",
-    "updatedAt": "2026-05-13T00:28:03.350Z"
+    "updatedAt": "2026-05-14T00:29:24.244Z"
   }
 ]
